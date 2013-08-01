@@ -1,0 +1,4 @@
+requests==1.2.3
+simple-salesforce==0.51
+gevent==0.13.8
+

@@ -53,7 +53,7 @@ def _check_test_result(test_id):
                 print r['StackTrace']
                 print "*" * 78                
             # exit(1)
-        print test_id, "ok"
+        print test_id, res['ExtendedStatus']
         return True
 
 def test(class_id):

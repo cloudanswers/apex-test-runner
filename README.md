@@ -6,6 +6,17 @@ using test driven development a little bit easier than having
 to wait for eclipse to constantly figure out how not to freeze
 
 
+how to use
+----------
+
+    $ vi test.py # put in your credentials
+    $ virtualenv venv
+    $ pip install -r requirements.txt
+    $ python test.py
+
+ Optionally the script will take an argument to filter the tests:
+
+    $ python test.py "Test_Lead_%"
 
 
 concept
@@ -24,10 +35,18 @@ overview:
     recompiled so you know if you broke something without having to
     run your unit tests
 
+
+current status
+--------------
+
+It runs all your tests you selected and prints out errors if there were any.
+It is WAY faster than running them in eclipse.
+It doesn't lock eclipse when the tests run so you can keep typing other code while tests for the last function run.
+
 TODO
 ----
 
-1. find all test classes and run all tests
-2. monitor fsevents for file changes to know what test to run
-3. function to find related tests to a class
-
+1. take auth settings out of script
+1. monitor fsevents for file changes to know what test to run?
+1. monitor the ApexClass table for changes?
+1. function to find related tests to a class so we're not blindly running all of them

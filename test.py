@@ -24,6 +24,9 @@ headers = {"Authorization": "Bearer "+sf.session_id,
 def _queue_test(class_id):
     res = requests.post(base_url, data=json.dumps({"ApexClassId": class_id}),
         headers=headers)
+    if 'Apex test class already enqueued' in res.content:
+        print "You probably have 10 copies of each test scheduled"
+        exit(1)
     return res.json()['id']
 
 def _query(soql):
@@ -65,12 +68,14 @@ def test(class_id):
             gevent.sleep(3)
         assert sleep_times < 20, "%s slept too many times" % class_id
 
-def class_ids():
-    for r in _query("select Id, Name from ApexClass where Name like 'Test_API_V1%'"):
+def class_ids(pattern):
+    for r in _query("select Id, Name from ApexClass where Name like '%s'" % pattern):
         yield r['Id']
 
 if __name__ == "__main__":
+    pattern = '%test%' if len(sys.argv) < 2 else sys.argv[1]
+    print 'Running tests matching "%s"' % pattern
     threads = []
-    for class_id in class_ids():
+    for class_id in class_ids(pattern):
         threads.append(gevent.spawn(test, class_id))
     gevent.joinall(threads)

@@ -13,11 +13,18 @@ how to use
     $ virtualenv venv
     $ pip install -r requirements.txt
     $ python test.py
+    $ python test.py "Test_Lead_Automate"
+    Running tests matching "Test_Lead_Automate"
+    709e00000002W1NAAU (1/1)
+    $ 
 
  Optionally the script will take an argument to filter the tests:
 
     $ python test.py "Test_Lead_%"
-
+    Running tests matching "Test_Lead_Automate"
+    709e00000002W1NAAU (1/1)
+    $
+    
 
 concept
 -------

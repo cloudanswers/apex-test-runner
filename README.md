@@ -9,6 +9,8 @@ to wait for eclipse to constantly figure out how not to freeze
 how to use
 ----------
 
+Dependencies (Mac/Linux/BSD):  pip (`sudo easy_install pip`), virtualenv (`sudo pip install virtualenv`)
+
     $ vi test.py # put in your credentials
     $ virtualenv venv
     $ pip install -r requirements.txt

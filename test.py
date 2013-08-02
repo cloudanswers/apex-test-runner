@@ -43,16 +43,15 @@ def _check_test_result(test_id):
         items = res['ExtendedStatus'][1:-1].split('/')
         if items[0] != items[1]:
             print "ERROR"
-            res = _query(("select MethodName, Message, StackTrace "
+            res2 = _query(("select MethodName, Message, StackTrace "
                           "from ApexTestResult "
                           "where Outcome != 'Pass' "
                           "and AsyncApexJobId = '%s'" % res['ParentJobId']))
-            for r in res:
+            for r in res2:
                 print "*" * 78
                 print r['Message']
                 print r['StackTrace']
                 print "*" * 78                
-            # exit(1)
         print test_id, res['ExtendedStatus']
         return True
 

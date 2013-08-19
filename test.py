@@ -3,22 +3,57 @@ from gevent import monkey
 monkey.patch_all()
 
 import json
+import os
+import re
 import requests
 from simple_salesforce import Salesforce
 import sys
 from time import sleep
 
 
-# start one connection so everyone can use it
-sf = Salesforce(username='',
-			    password='',
-                security_token='',
-                sandbox=True)
+# env file functions derrived from honcho
 
-base_url = 'https://' + sf.sf_instance + \
-           '/services/data/v28.0/sobjects/ApexTestQueueItem'
-headers = {"Authorization": "Bearer " + sf.session_id,
-           'Content-type': 'application/json'}
+def __parse_env(content):
+    for line in content.splitlines():
+        m1 = re.match(r'\A([A-Za-z_0-9]+)=(.*)\Z', line)
+        if m1:
+            key, val = m1.group(1), m1.group(2)
+            # handle single quote enclosed value
+            m2 = re.match(r"\A'(.*)'\Z", val)
+            if m2:
+                val = m2.group(1)
+            # handle double quote enclosed value
+            m3 = re.match(r'\A"(.*)"\Z', val)
+            if m3:
+                val = re.sub(r'\\(.)', r'\1', m3.group(1))
+            os.environ[key] = val
+
+
+def __read_env_file():
+    if os.path.exists('.env'):
+        try:
+            with open('.env') as f:
+                __parse_env(f.read())
+        except IOError:
+            # you don't have to have an env file
+            pass
+
+
+global sf
+
+
+def _connect():
+    global sf, base_url, headers
+    # start one connection so everyone can use it
+    sf = Salesforce(username=os.environ.get('USERNAME', ''),
+                    password=os.environ.get('PASSWORD', ''),
+                    security_token=os.environ.get('TOKEN', ''),
+                    sandbox=os.environ.get('SANDBOX', '') != '')
+
+    base_url = 'https://' + sf.sf_instance + \
+               '/services/data/v28.0/sobjects/ApexTestQueueItem'
+    headers = {"Authorization": "Bearer " + sf.session_id,
+               'Content-type': 'application/json'}
 
 
 def _queue_test(class_id):
@@ -67,8 +102,8 @@ def _check_test_result(test_id):
 
 def _test(class_id):
     test_id = _queue_test(class_id)
-    for i in range(20):
-        gevent.sleep(i)
+    for i in range(30):
+        gevent.sleep(i*10)
         if _check_test_result(test_id):
             return
     print "the test for class_id %s took too long, exiting" % class_id
@@ -82,14 +117,18 @@ def _last_apex_class_change():
         return res[0]['SystemModstamp']
 
 
-def _sleep_until_new_change(last):
-    for i in range(20):
-        sleep(2)
+def _sleep_until_new_change(last, sleep_duration=2):
+    for i in range(5):
+        sleep(sleep_duration)
         new_last = _last_apex_class_change()
         if new_last != last:
             return new_last
-    print "No new tests for too long, shutting down to save api calls"
-    exit()
+    if sleep_duration < 100:
+        _sleep_until_new_change(last, sleep_duration * 2)
+    else:
+        # about 5 mins
+        print "No new tests for too long, shutting down to save api calls"
+        exit(1)
 
 
 def class_ids(pattern):
@@ -112,6 +151,8 @@ def process_forever(pattern):
 
 
 if __name__ == "__main__":
+    __read_env_file()
+    _connect()
     pattern = '%test%' if len(sys.argv) < 2 else sys.argv[1]
     print 'Running tests matching "%s"' % pattern
     process_forever(pattern)
